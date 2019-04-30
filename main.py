@@ -8,14 +8,14 @@ import matplotlib.cm as cm
 
 
 class MLP(object):
-    def __init__(self, dados_x, dados_y, dimensao_layers, epoch=100, minibatch_tamanho=32, taxa_aprendizado=0.1, unidade_escondida="sigmoid", mostrar_grafico_custo=False):
+    def __init__(self, dados_x, dados_y, dimensao_layers, epoch=100, minibatch_tamanho=32, taxa_aprendizado=0.1, camadas_escondidas="sigmoid", mostrar_grafico_custo=False):
         self.X = dados_x
         self.Y = dados_y
         self.epoch = epoch
         self.minibatch_tamanho = minibatch_tamanho
         self.taxa_aprendizado = taxa_aprendizado
         self.dimensao_layers = dimensao_layers
-        self.unidade_escondida = unidade_escondida
+        self.camadas_escondidas = camadas_escondidas
         self.mostrar_grafico_custo = mostrar_grafico_custo
         self.layers = len(dimensao_layers) - 1
         self.parametros = self._inicializar_parametros
@@ -71,17 +71,17 @@ class MLP(object):
             "A0": dados_entrada,
             "Z1": z1,
         }
-        if self.unidade_escondida == "relu":
+        if self.camadas_escondidas == "relu":
             resultado_forward["A1"] = self._relu(z1)
-        elif self.unidade_escondida == "tanh":
+        elif self.camadas_escondidas == "tanh":
             resultado_forward["A1"] = self._tanh(z1)
         else:
             resultado_forward["A1"] = self._sigmoid(z1)
         for l in range(2, self.layers):
             resultado_forward["Z" + str(l)] = np.dot(self.parametros["W" + str(l)], resultado_forward["A" + str(l - 1)]) + self.parametros["b" + str(l)]
-            if self.unidade_escondida == "relu":
+            if self.camadas_escondidas == "relu":
                 resultado_forward["A" + str(l)] = self._relu(resultado_forward["Z" + str(l)])
-            elif self.unidade_escondida == "tanh":
+            elif self.camadas_escondidas == "tanh":
                 resultado_forward["A" + str(l)] = self._tanh(resultado_forward["Z" + str(l)])
             else:
                 resultado_forward["A" + str(l)] = self._sigmoid(resultado_forward["Z" + str(l)])
@@ -98,9 +98,9 @@ class MLP(object):
             "db" + str(self.layers): np.sum(dz, axis=1, keepdims=True) / num_exemplos
         }
         for i in reversed(range(1, self.layers)):
-            if self.unidade_escondida == "relu":
+            if self.camadas_escondidas == "relu":
                 dz = np.dot(self.parametros["W" + str(i + 1)].T, dz) * self._relu_backward(resultado_forward["Z" + str(i)])
-            elif self.unidade_escondida == "tanh":
+            elif self.camadas_escondidas == "tanh":
                 dz = np.dot(self.parametros["W" + str(i + 1)].T, dz) * self._tanh_backward(resultado_forward["A" + str(i)])
             else:
                 dz = np.dot(self.parametros["W" + str(i + 1)].T, dz) * self._sigmoid_backward(resultado_forward["A" + str(i)])
@@ -128,15 +128,15 @@ class MLP(object):
         y_aleatorio = self.Y[:, permutacao].reshape((self.Y.shape[0], num_exemplos))
 
         mini_batches = []
-        minibatches_completos = math.floor(num_exemplos / self.minibatch_tamanho)
-        for k in range(minibatches_completos):
+        mini_batches_completos = math.floor(num_exemplos / self.minibatch_tamanho)
+        for k in range(mini_batches_completos):
             mini_batch_x = x_aleatorio[:, k * self.minibatch_tamanho:(k + 1) * self.minibatch_tamanho]
             mini_batch_y = y_aleatorio[:, k * self.minibatch_tamanho:(k + 1) * self.minibatch_tamanho]
             mini_batches.append((mini_batch_x, mini_batch_y))
 
         if (num_exemplos % self.minibatch_tamanho) != 0:
-            mini_batch_x = x_aleatorio[:, self.minibatch_tamanho * minibatches_completos:num_exemplos]
-            mini_batch_y = y_aleatorio[:, self.minibatch_tamanho * minibatches_completos:num_exemplos]
+            mini_batch_x = x_aleatorio[:, self.minibatch_tamanho * mini_batches_completos:num_exemplos]
+            mini_batch_y = y_aleatorio[:, self.minibatch_tamanho * mini_batches_completos:num_exemplos]
             mini_batches.append((mini_batch_x, mini_batch_y))
 
         return mini_batches
@@ -153,7 +153,7 @@ class MLP(object):
                 for l in range(1, self.layers + 1):
                     self.parametros["W" + str(l)] -= self.taxa_aprendizado * resultado_backward["dW" + str(l)]
                     self.parametros["b" + str(l)] -= self.taxa_aprendizado * resultado_backward["db" + str(l)]
-            if self.mostrar_grafico_custo:
+            if self.mostrar_grafico_custo and (i % 5 == 0):
                 print("Custo: {:.3f}, epoch: {:d}".format(custo, i))
                 custos.append(custo)
 
@@ -177,7 +177,7 @@ def main():
     treino_x = treino_x.T
     treino_y_one_hot = np.eye(10)[treino_y]
     treino_y_one_hot = treino_y_one_hot.T
-    mlp = MLP(treino_x, treino_y_one_hot, [784, 15, 10], 100, 64, 0.03, "relu", True)
+    mlp = MLP(treino_x, treino_y_one_hot, [784, 18, 10], 40, 64, 0.06, "relu", True)
     mlp.treinar()
     print(mlp.taxa_acertos(treino_x, treino_y_one_hot))
 
