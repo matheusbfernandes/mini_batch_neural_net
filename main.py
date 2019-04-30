@@ -40,7 +40,6 @@ class MLP(object):
     def _relu_backward(z):
         z[z <= 0] = 0
         z[z > 0] = 1
-
         return z
 
     @staticmethod
@@ -122,12 +121,12 @@ class MLP(object):
 
         return total_positivos / num_dados
 
-    def _obter_mini_batchs(self):
+    def _obter_mini_batches(self):
         num_exemplos = self.X.shape[1]
         permutacao = list(np.random.permutation(num_exemplos))
-
         x_aleatorio = self.X[:, permutacao]
         y_aleatorio = self.Y[:, permutacao].reshape((self.Y.shape[0], num_exemplos))
+
         mini_batches = []
         minibatches_completos = math.floor(num_exemplos / self.minibatch_tamanho)
         for k in range(minibatches_completos):
@@ -143,7 +142,7 @@ class MLP(object):
         return mini_batches
 
     def treinar(self):
-        mini_batches = self._obter_mini_batchs()
+        mini_batches = self._obter_mini_batches()
         custos = []
         for i in range(self.epoch):
             custo = 0
@@ -167,18 +166,18 @@ class MLP(object):
 
 
 def main():
-    with gzip.open('mnist.pkl.gz', 'rb') as f:
+    with gzip.open("mnist.pkl.gz", "rb") as f:
         if sys.version_info.major > 2:
             dados_treino, dados_validacao, dados_teste = pickle.load(f, encoding='latin1')
         else:
             dados_treino, dados_validacao, dados_teste = pickle.load(f)
     treino_x, treino_y = dados_treino
-    # plt.imshow(treino_x[0].reshape((28, 28)), cmap=cm.Greys_r)
-    # plt.show()
+    plt.imshow(treino_x[0].reshape((28, 28)), cmap=cm.Greys_r)
+    plt.show()
     treino_x = treino_x.T
     treino_y_one_hot = np.eye(10)[treino_y]
     treino_y_one_hot = treino_y_one_hot.T
-    mlp = MLP(treino_x, treino_y_one_hot, [784, 500, 15, 10], 100, 64, 0.03, "relu", True)
+    mlp = MLP(treino_x, treino_y_one_hot, [784, 15, 10], 100, 64, 0.03, "relu", True)
     mlp.treinar()
     print(mlp.taxa_acertos(treino_x, treino_y_one_hot))
 
